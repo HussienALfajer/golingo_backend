@@ -1,0 +1,30 @@
+# Dependencies
+node_modules/
+
+# Test files
+test/
+*.spec.ts
+*.e2e-spec.ts
+jest-e2e.json
+
+# Development files
+.env
+.env.local
+.env.development
+.env.test
+
+# IDE
+.vscode/
+.idea/
+
+# Logs
+*.log
+npm-debug.log*
+
+# Scripts (not needed in production)
+scripts/
+
+# Other
+*.md
+!README.md
+nul

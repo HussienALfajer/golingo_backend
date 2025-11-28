@@ -1,0 +1,2144 @@
+{
+	"info": {
+		"_postman_id": "sign-language-platform-2024",
+		"name": "Sign Language Platform - Complete API Collection",
+		"description": "Comprehensive Postman collection for testing all backend features of the Sign Language Platform. Includes authentication, lessons, quizzes, progress tracking, gamification, and more.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "http://localhost:3000/api",
+			"type": "string"
+		},
+		{
+			"key": "accessToken",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "refreshToken",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "userId",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "levelId",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "categoryId",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "lessonId",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "videoId",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "quizId",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "notificationId",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "shopItemId",
+			"value": "",
+			"type": "string"
+		}
+	],
+	"item": [
+		{
+			"name": "Authentication",
+			"item": [
+				{
+					"name": "Register Learner",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 201) {",
+									"    const response = pm.response.json();",
+									"    pm.collectionVariables.set('accessToken', response.accessToken);",
+									"    pm.collectionVariables.set('refreshToken', response.refreshToken);",
+									"    pm.collectionVariables.set('userId', response.user.id);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"learner@example.com\",\n  \"password\": \"Password123\",\n  \"displayName\": \"John Learner\",\n  \"role\": \"learner\",\n  \"age\": 10\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/auth/register",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"auth",
+								"register"
+							]
+						},
+						"description": "Register a new learner account. Returns access token and refresh token."
+					},
+					"response": []
+				},
+				{
+					"name": "Register Admin",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"admin@example.com\",\n  \"password\": \"AdminPassword123\",\n  \"displayName\": \"Admin User\",\n  \"role\": \"admin\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/auth/register",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"auth",
+								"register"
+							]
+						},
+						"description": "Register a new admin account."
+					},
+					"response": []
+				},
+				{
+					"name": "Login",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    const response = pm.response.json();",
+									"    pm.collectionVariables.set('accessToken', response.accessToken);",
+									"    pm.collectionVariables.set('refreshToken', response.refreshToken);",
+									"    pm.collectionVariables.set('userId', response.user.id);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"learner@example.com\",\n  \"password\": \"Password123\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/auth/login",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"auth",
+								"login"
+							]
+						},
+						"description": "Login with email and password. Returns access token and refresh token."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Current User",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{accessToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/auth/me",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"auth",
+								"me"
+							]
+						},
+						"description": "Get currently authenticated user information."
+					},
+					"response": []
+				},
+				{
+					"name": "Refresh Token",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    const response = pm.response.json();",
+									"    pm.collectionVariables.set('accessToken', response.accessToken);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"refreshToken\": \"{{refreshToken}}\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/auth/refresh",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"auth",
+								"refresh"
+							]
+						},
+						"description": "Refresh access token using refresh token."
+					},
+					"response": []
+				},
+				{
+					"name": "Logout",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{accessToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"refreshToken\": \"{{refreshToken}}\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/auth/logout",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"auth",
+								"logout"
+							]
+						},
+						"description": "Logout user and invalidate tokens."
+					},
+					"response": []
+				},
+				{
+					"name": "Forgot Password",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"learner@example.com\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/auth/forgot-password",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"auth",
+								"forgot-password"
+							]
+						},
+						"description": "Request password reset. Returns reset token in development mode."
+					},
+					"response": []
+				},
+				{
+					"name": "Reset Password",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"token\": \"RESET_TOKEN_HERE\",\n  \"newPassword\": \"NewPassword123\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/auth/reset-password",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"auth",
+								"reset-password"
+							]
+						},
+						"description": "Reset password using token from forgot-password."
+					},
+					"response": []
+				},
+				{
+					"name": "Change Password",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{accessToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"currentPassword\": \"Password123\",\n  \"newPassword\": \"NewPassword456\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/auth/change-password",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"auth",
+								"change-password"
+							]
+						},
+						"description": "Change password for authenticated user."
+					},
+					"response": []
+				}
+			],
+			"description": "Authentication endpoints for registration, login, logout, and password management."
+		},
+		{
+			"name": "Levels (Admin)",
+			"item": [
+				{
+					"name": "Get All Levels",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    const response = pm.response.json();",
+									"    if (response.length > 0) {",
+									"        pm.collectionVariables.set('levelId', response[0]._id);",
+									"    }",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{accessToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/admin/levels",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"admin",
+								"levels"
+							]
+						},
+						"description": "Get all levels (Admin only)."
+					},
+					"response": []
+				},
+				{
+					"name": "Create Level",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 201) {",
+									"    const response = pm.response.json();",
+									"    pm.collectionVariables.set('levelId', response._id);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{accessToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"code\": \"level-1\",\n  \"title\": \"Level 1\",\n  \"description\": \"Beginner level\",\n  \"order\": 1\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/admin/levels",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"admin",
+								"levels"
+							]
+						},
+						"description": "Create a new level (Admin only)."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Level by ID",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{accessToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/admin/levels/{{levelId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"admin",
+								"levels",
+								"{{levelId}}"
+							]
+						},
+						"description": "Get level details by ID (Admin only)."
+					},
+					"response": []
+				},
+				{
+					"name": "Update Level",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{accessToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"title\": \"Updated Level 1\",\n  \"description\": \"Updated description\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/admin/levels/{{levelId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"admin",
+								"levels",
+								"{{levelId}}"
+							]
+						},
+						"description": "Update level (Admin only)."
+					},
+					"response": []
+				},
+				{
+					"name": "Reorder Levels",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{accessToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"levelIds\": [\"{{levelId}}\"]\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/admin/levels/reorder",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"admin",
+								"levels",
+								"reorder"
+							]
+						},
+						"description": "Reorder levels (Admin only)."
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Level",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{accessToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/admin/levels/{{levelId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"admin",
+								"levels",
+								"{{levelId}}"
+							]
+						},
+						"description": "Soft delete level (Admin only)."
+					},
+					"response": []
+				}
+			],
+			"description": "Admin endpoints for managing levels."
+		},
+		{
+			"name": "Categories",
+			"item": [
+				{
+					"name": "Get All Categories",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    const response = pm.response.json();",
+									"    if (response.length > 0) {",
+									"        pm.collectionVariables.set('categoryId', response[0]._id);",
+									"    }",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/categories",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"categories"
+							]
+						},
+						"description": "Get all categories."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Categories by Level",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/categories?levelId={{levelId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"categories"
+							],
+							"query": [
+								{
+									"key": "levelId",
+									"value": "{{levelId}}"
+								}
+							]
+						},
+						"description": "Get categories filtered by level ID."
+					},
+					"response": []
+				},
+				{
+					"name": "Create Category",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 201) {",
+									"    const response = pm.response.json();",
+									"    pm.collectionVariables.set('categoryId', response._id);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{accessToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"levelId\": \"{{levelId}}\",\n  \"code\": \"food\",\n  \"title\": \"Food\",\n  \"description\": \"Learn signs for food items\",\n  \"order\": 1\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/categories",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"categories"
+							]
+						},
+						"description": "Create a new category (Admin only)."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Category by ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/categories/{{categoryId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"categories",
+								"{{categoryId}}"
+							]
+						},
+						"description": "Get category details by ID."
+					},
+					"response": []
+				},
+				{
+					"name": "Update Category",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{accessToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"title\": \"Updated Food Category\",\n  \"description\": \"Updated description\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/categories/{{categoryId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"categories",
+								"{{categoryId}}"
+							]
+						},
+						"description": "Update category (Admin only)."
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Category",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{accessToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/categories/{{categoryId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"categories",
+								"{{categoryId}}"
+							]
+						},
+						"description": "Soft delete category (Admin only)."
+					},
+					"response": []
+				}
+			],
+			"description": "Endpoints for managing categories."
+		},
+		{
+			"name": "Lessons",
+			"item": [
+				{
+					"name": "Get Lessons by Category",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    const response = pm.response.json();",
+									"    if (response.success && response.data.length > 0) {",
+									"        pm.collectionVariables.set('lessonId', response.data[0]._id);",
+									"    }",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/lessons/categories/{{categoryId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"lessons",
+								"categories",
+								"{{categoryId}}"
+							]
+						},
+						"description": "Get all lessons for a specific category."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Lesson Detail",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    const response = pm.response.json();",
+									"    if (response.success && response.data.videos && response.data.videos.length > 0) {",
+									"        pm.collectionVariables.set('videoId', response.data.videos[0]._id);",
+									"    }",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/lessons/{{lessonId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"lessons",
+								"{{lessonId}}"
+							]
+						},
+						"description": "Get lesson details including videos."
+					},
+					"response": []
+				}
+			],
+			"description": "Endpoints for accessing lessons."
+		},
+		{
+			"name": "Videos",
+			"item": [
+				{
+					"name": "Get All Videos",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/videos",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"videos"
+							]
+						},
+						"description": "Get all videos."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Videos by Category",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/videos?categoryId={{categoryId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"videos"
+							],
+							"query": [
+								{
+									"key": "categoryId",
+									"value": "{{categoryId}}"
+								}
+							]
+						},
+						"description": "Get videos filtered by category."
+					},
+					"response": []
+				},
+				{
+					"name": "Create Video",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 201) {",
+									"    const response = pm.response.json();",
+									"    pm.collectionVariables.set('videoId', response._id);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{accessToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"categoryId\": \"{{categoryId}}\",\n  \"word\": \"hello\",\n  \"videoUrl\": \"https://example.com/hello.mp4\",\n  \"thumbnailUrl\": \"https://example.com/hello-thumb.jpg\",\n  \"order\": 1\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/videos",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"videos"
+							]
+						},
+						"description": "Create a new video (Admin only)."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Video by ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/videos/{{videoId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"videos",
+								"{{videoId}}"
+							]
+						},
+						"description": "Get video details by ID."
+					},
+					"response": []
+				},
+				{
+					"name": "Update Video",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{accessToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"word\": \"updated-hello\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/videos/{{videoId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"videos",
+								"{{videoId}}"
+							]
+						},
+						"description": "Update video (Admin only)."
+					},
+					"response": []
+				},
+				{
+					"name": "Upload Video File",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{accessToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "file",
+									"type": "file",
+									"src": []
+								}
+							]
+						},
+						"url": {
+							"raw": "{{baseUrl}}/videos/{{videoId}}/video",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"videos",
+								"{{videoId}}",
+								"video"
+							]
+						},
+						"description": "Upload video file for a video (Admin only)."
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Video",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{accessToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/videos/{{videoId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"videos",
+								"{{videoId}}"
+							]
+						},
+						"description": "Soft delete video (Admin only)."
+					},
+					"response": []
+				}
+			],
+			"description": "Endpoints for managing videos."
+		},
+		{
+			"name": "Quizzes",
+			"item": [
+				{
+					"name": "Get All Quizzes",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    const response = pm.response.json();",
+									"    if (response.length > 0) {",
+									"        pm.collectionVariables.set('quizId', response[0]._id);",
+									"    }",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/quizzes?limit=50&skip=0&includeQuestions=true",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"quizzes"
+							],
+							"query": [
+								{
+									"key": "limit",
+									"value": "50"
+								},
+								{
+									"key": "skip",
+									"value": "0"
+								},
+								{
+									"key": "includeQuestions",
+									"value": "true"
+								}
+							]
+						},
+						"description": "Get all quizzes with pagination and optional questions."
+					},
+					"response": []
+				},
+				{
+					"name": "Create Quiz",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{accessToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"categoryId\": \"{{categoryId}}\",\n  \"type\": \"category_final\",\n  \"title\": \"Food Category Quiz\",\n  \"description\": \"Test your knowledge of food signs\",\n  \"passingScore\": 70,\n  \"questions\": [\n    {\n      \"questionText\": \"What sign is this?\",\n      \"questionType\": \"multiple_choice\",\n      \"videoUrl\": \"https://example.com/apple.mp4\",\n      \"points\": 10,\n      \"order\": 1,\n      \"options\": [\n        {\n          \"optionText\": \"Apple\",\n          \"isCorrect\": true,\n          \"order\": 1\n        },\n        {\n          \"optionText\": \"Banana\",\n          \"isCorrect\": false,\n          \"order\": 2\n        }\n      ]\n    }\n  ]\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/quizzes",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"quizzes"
+							]
+						},
+						"description": "Create a new quiz (Admin only)."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Quiz by ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/quizzes/{{quizId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"quizzes",
+								"{{quizId}}"
+							]
+						},
+						"description": "Get quiz details by ID."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Category Quiz",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{accessToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/quizzes/category/{{categoryId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"quizzes",
+								"category",
+								"{{categoryId}}"
+							]
+						},
+						"description": "Get category final quiz by category ID."
+					},
+					"response": []
+				},
+				{
+					"name": "Submit Quiz",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{accessToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"quizId\": \"{{quizId}}\",\n  \"answers\": [\n    {\n      \"questionId\": \"QUESTION_ID_HERE\",\n      \"selectedOptionIds\": [\"OPTION_ID_HERE\"]\n    }\n  ]\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/quizzes/submit",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"quizzes",
+								"submit"
+							]
+						},
+						"description": "Submit quiz answers and get results."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Quiz Attempts",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{accessToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/quizzes/{{quizId}}/attempts",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"quizzes",
+								"{{quizId}}",
+								"attempts"
+							]
+						},
+						"description": "Get all attempts for a quiz."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Quiz Best Score",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{accessToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/quizzes/{{quizId}}/best-score",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"quizzes",
+								"{{quizId}}",
+								"best-score"
+							]
+						},
+						"description": "Get best score for a quiz across all users."
+					},
+					"response": []
+				},
+				{
+					"name": "Get User Attempts",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{accessToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/quizzes/user/{{userId}}/attempts?quizId={{quizId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"quizzes",
+								"user",
+								"{{userId}}",
+								"attempts"
+							],
+							"query": [
+								{
+									"key": "quizId",
+									"value": "{{quizId}}"
+								}
+							]
+						},
+						"description": "Get user attempts for a specific quiz or all quizzes."
+					},
+					"response": []
+				},
+				{
+					"name": "Get User Best Score",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{accessToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/quizzes/user/{{userId}}/best-score?quizId={{quizId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"quizzes",
+								"user",
+								"{{userId}}",
+								"best-score"
+							],
+							"query": [
+								{
+									"key": "quizId",
+									"value": "{{quizId}}"
+								}
+							]
+						},
+						"description": "Get user's best score for a specific quiz or across all quizzes."
+					},
+					"response": []
+				},
+				{
+					"name": "Generate Category Quiz",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{accessToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/quizzes/category/{{categoryId}}/generate",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"quizzes",
+								"category",
+								"{{categoryId}}",
+								"generate"
+							]
+						},
+						"description": "Generate category quiz from lessons (Admin only)."
+					},
+					"response": []
+				}
+			],
+			"description": "Endpoints for managing and taking quizzes."
+		},
+		{
+			"name": "Progress",
+			"item": [
+				{
+					"name": "Get All Levels Progress",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{accessToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/me/progress/levels",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"me",
+								"progress",
+								"levels"
+							]
+						},
+						"description": "Get progress for all levels."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Level Progress",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{accessToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/me/progress/levels/{{levelId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"me",
+								"progress",
+								"levels",
+								"{{levelId}}"
+							]
+						},
+						"description": "Get progress for a specific level with categories."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Category Progress",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{accessToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/me/progress/categories/{{categoryId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"me",
+								"progress",
+								"categories",
+								"{{categoryId}}"
+							]
+						},
+						"description": "Get progress for a specific category with videos."
+					},
+					"response": []
+				},
+				{
+					"name": "Mark Video as Watched",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{accessToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/me/progress/lessons/{{lessonId}}/videos/{{videoId}}/mark-watched",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"me",
+								"progress",
+								"lessons",
+								"{{lessonId}}",
+								"videos",
+								"{{videoId}}",
+								"mark-watched"
+							]
+						},
+						"description": "Mark a video within a lesson as watched."
+					},
+					"response": []
+				}
+			],
+			"description": "Endpoints for tracking learner progress."
+		},
+		{
+			"name": "Gamification",
+			"item": [
+				{
+					"name": "Get User Stats",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{accessToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/me/gamify/stats",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"me",
+								"gamify",
+								"stats"
+							]
+						},
+						"description": "Get user gamification stats (XP, energy, gems, streak)."
+					},
+					"response": []
+				},
+				{
+					"name": "Apply Session",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{accessToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"correct\": 8,\n  \"total\": 10,\n  \"passed\": true,\n  \"categoryId\": \"{{categoryId}}\",\n  \"quizId\": \"{{quizId}}\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/me/gamify/apply-session",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"me",
+								"gamify",
+								"apply-session"
+							]
+						},
+						"description": "Apply a learning/quiz session to update gamification stats."
+					},
+					"response": []
+				},
+				{
+					"name": "Get User Achievements",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{accessToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/me/gamify/achievements",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"me",
+								"gamify",
+								"achievements"
+							]
+						},
+						"description": "Get user's unlocked achievements."
+					},
+					"response": []
+				},
+				{
+					"name": "Check Achievements",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{accessToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/me/gamify/achievements/check",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"me",
+								"gamify",
+								"achievements",
+								"check"
+							]
+						},
+						"description": "Manually check and unlock achievements."
+					},
+					"response": []
+				}
+			],
+			"description": "Endpoints for gamification features (XP, gems, energy, streaks)."
+		},
+		{
+			"name": "Learning Path",
+			"item": [
+				{
+					"name": "Get Learning Path",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{accessToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/me/path",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"me",
+								"path"
+							]
+						},
+						"description": "Get learning path with node states (locked/current/completed/perfect)."
+					},
+					"response": []
+				}
+			],
+			"description": "Endpoint for learning path visualization."
+		},
+		{
+			"name": "Shop",
+			"item": [
+				{
+					"name": "Get Shop Items",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    const response = pm.response.json();",
+									"    if (response.length > 0) {",
+									"        pm.collectionVariables.set('shopItemId', response[0].id);",
+									"    }",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{accessToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/shop/items",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"shop",
+								"items"
+							]
+						},
+						"description": "Get all available shop items."
+					},
+					"response": []
+				},
+				{
+					"name": "Purchase Item",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{accessToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"shopItemId\": \"{{shopItemId}}\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/shop/purchase",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"shop",
+								"purchase"
+							]
+						},
+						"description": "Purchase a shop item with gems."
+					},
+					"response": []
+				}
+			],
+			"description": "Endpoints for in-game shop."
+		},
+		{
+			"name": "Achievements",
+			"item": [
+				{
+					"name": "Get All Achievements",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/achievements",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"achievements"
+							]
+						},
+						"description": "Get all active achievements."
+					},
+					"response": []
+				},
+				{
+					"name": "Get My Achievements",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{accessToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/achievements/me",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"achievements",
+								"me"
+							]
+						},
+						"description": "Get current user's unlocked achievements."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Achievement by ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/achievements/ACHIEVEMENT_ID",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"achievements",
+								"ACHIEVEMENT_ID"
+							]
+						},
+						"description": "Get achievement details by ID."
+					},
+					"response": []
+				}
+			],
+			"description": "Endpoints for achievements system."
+		},
+		{
+			"name": "Notifications",
+			"item": [
+				{
+					"name": "Get User Notifications",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    const response = pm.response.json();",
+									"    if (response.length > 0) {",
+									"        pm.collectionVariables.set('notificationId', response[0]._id);",
+									"    }",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{accessToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/notifications",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"notifications"
+							]
+						},
+						"description": "Get user notifications."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Unread Notifications",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{accessToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/notifications?unreadOnly=true",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"notifications"
+							],
+							"query": [
+								{
+									"key": "unreadOnly",
+									"value": "true"
+								}
+							]
+						},
+						"description": "Get only unread notifications."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Unread Count",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{accessToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/notifications/unread-count",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"notifications",
+								"unread-count"
+							]
+						},
+						"description": "Get count of unread notifications."
+					},
+					"response": []
+				},
+				{
+					"name": "Mark as Read",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{accessToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PATCH",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/notifications/{{notificationId}}/read",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"notifications",
+								"{{notificationId}}",
+								"read"
+							]
+						},
+						"description": "Mark a notification as read."
+					},
+					"response": []
+				},
+				{
+					"name": "Mark All as Read",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{accessToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PATCH",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/notifications/read-all",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"notifications",
+								"read-all"
+							]
+						},
+						"description": "Mark all notifications as read."
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Notification",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{accessToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/notifications/{{notificationId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"notifications",
+								"{{notificationId}}"
+							]
+						},
+						"description": "Delete a notification."
+					},
+					"response": []
+				}
+			],
+			"description": "Endpoints for notifications."
+		}
+	]
+}

@@ -1,0 +1,385 @@
+/**
+ * Media Service
+ * Service for managing media files on Backblaze B2
+ */
+
+import {
+  Injectable,
+  BadRequestException,
+  InternalServerErrorException,
+  Logger,
+} from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+import { v4 as uuidv4 } from 'uuid';
+import { extname } from 'path';
+
+// AWS SDK - dynamically imported
+type AWS = any;
+type S3 = any;
+
+@Injectable()
+export class MediaService {
+  private readonly logger = new Logger(MediaService.name);
+  private s3: S3 | null = null;
+  private bucket: string;
+  private baseUrl: string;
+  private AWS: AWS | null = null;
+  private provider: string;
+  private region: string;
+  private endpoint: string | null = null;
+
+  constructor(private configService: ConfigService) {
+    const provider = this.configService.get<string>('storage.provider') ?? 's3';
+
+    this.bucket =
+      this.configService.get<string>('storage.bucket') ?? 'sign-language-media';
+    this.baseUrl = this.configService.get<string>('storage.baseUrl') ?? '';
+
+    try {
+      this.AWS = require('aws-sdk');
+    } catch (error) {
+      this.logger.warn(
+        'AWS SDK not available. Object storage service will be disabled.',
+      );
+      return;
+    }
+
+    const accessKeyId =
+      this.configService.get<string>('storage.accessKeyId') ??
+      this.configService.get<string>('storage.awsAccessKeyId');
+    const secretAccessKey =
+      this.configService.get<string>('storage.secretAccessKey') ??
+      this.configService.get<string>('storage.awsSecretAccessKey');
+    const region =
+      this.configService.get<string>('storage.region') ??
+      this.configService.get<string>('storage.awsRegion') ??
+      'us-east-1';
+    const endpoint =
+      this.configService.get<string>('storage.endpoint') ??
+      this.configService.get<string>('storage.s3Endpoint') ??
+      undefined;
+
+    if (!accessKeyId || !secretAccessKey) {
+      this.logger.warn(
+        'Storage credentials are not configured. Object storage will be disabled.',
+      );
+      return;
+    }
+
+    if (provider === 's3' || provider === 'backblaze') {
+      this.provider = provider;
+      // Sensible defaults for Backblaze B2 if envs are missing
+      const resolvedRegion =
+        provider === 'backblaze' && (!region || region === 'us-east-1')
+          ? 'us-east-005'
+          : region;
+      const resolvedEndpoint =
+        provider === 'backblaze' && !endpoint
+          ? `https://s3.us-east-005.backblazeb2.com`
+          : endpoint;
+
+      this.region = resolvedRegion;
+      this.endpoint = resolvedEndpoint || null;
+
+      this.s3 = new this.AWS.S3({
+        accessKeyId,
+        secretAccessKey,
+        region: this.region,
+        endpoint: this.endpoint || undefined,
+        signatureVersion: 'v4',
+        s3ForcePathStyle: true,
+      });
+
+      this.logger.log(
+        provider === 'backblaze'
+          ? 'Backblaze B2 (S3-compatible) storage initialized successfully'
+          : 'AWS S3 storage initialized successfully',
+      );
+    } else {
+      this.logger.warn(
+        `Unknown storage provider: ${provider}. Object storage will be disabled.`,
+      );
+    }
+  }
+
+  /**
+   * Create a folder for a level in Backblaze
+   */
+  async createLevelFolder(folderPath: string): Promise<string> {
+    if (!this.s3) {
+      throw new Error('Object storage is not configured');
+    }
+
+    try {
+      // In S3/B2, folders are created implicitly by creating objects with trailing slashes
+      const folderKey = this.ensureTrailingSlash(folderPath);
+
+      await this.s3
+        .putObject({
+          Bucket: this.bucket,
+          Key: folderKey,
+          Body: '',
+        })
+        .promise();
+
+      this.logger.log(`Level folder created successfully: ${folderKey}`);
+      return folderKey;
+    } catch (error: any) {
+      this.logger.error(
+        `Failed to create level folder: ${error.message}`,
+        error,
+      );
+      throw new InternalServerErrorException(
+        `Failed to create level folder: ${error.message}`,
+      );
+    }
+  }
+
+  /**
+   * Create a folder for a category inside a level folder
+   */
+  async createCategoryFolder(folderPath: string): Promise<string> {
+    if (!this.s3) {
+      throw new Error('Object storage is not configured');
+    }
+
+    try {
+      // Ensure folder path has trailing slash
+      const folderKey = this.ensureTrailingSlash(folderPath);
+
+      await this.s3
+        .putObject({
+          Bucket: this.bucket,
+          Key: folderKey,
+          Body: '',
+        })
+        .promise();
+
+      // Create subfolders (videos, images, files, quizzes)
+      const subfolders = ['videos/', 'images/', 'files/', 'quizzes/'];
+      for (const subfolder of subfolders) {
+        const subfolderKey = folderKey + subfolder;
+        await this.s3
+          .putObject({
+            Bucket: this.bucket,
+            Key: subfolderKey,
+            Body: '',
+          })
+          .promise();
+      }
+
+      this.logger.log(`Category folder created successfully: ${folderKey}`);
+      return folderKey;
+    } catch (error: any) {
+      this.logger.error(
+        `Failed to create category folder: ${error.message}`,
+        error,
+      );
+      throw new InternalServerErrorException(
+        `Failed to create category folder: ${error.message}`,
+      );
+    }
+  }
+
+  /**
+   * Upload a file to Backblaze B2
+   */
+  async uploadFile(
+    file: Express.Multer.File,
+    folderPath: string,
+    subfolder: 'videos' | 'images' | 'files' | 'quizzes' = 'files',
+  ): Promise<{ url: string; key: string; size: number; contentType: string }> {
+    if (!this.s3) {
+      throw new Error('Object storage is not configured');
+    }
+
+    if (!file) {
+      throw new BadRequestException('No file provided');
+    }
+
+    try {
+      // Generate unique filename
+      const fileExtension = extname(file.originalname);
+      const fileName = `${uuidv4()}${fileExtension}`;
+
+      // Ensure folder path has trailing slash
+      const folderKey = this.ensureTrailingSlash(folderPath);
+      const fileKey = `${folderKey}${subfolder}/${fileName}`;
+
+      // Upload file
+      // Note: Backblaze B2 doesn't support canned ACL like 'public-read'
+      // File visibility is controlled at the bucket level
+      const params: any = {
+        Bucket: this.bucket,
+        Key: fileKey,
+        Body: file.buffer,
+        ContentType: file.mimetype,
+        // No ACL here; rely on bucket-level permissions (public/private)
+      };
+
+      await this.s3.putObject(params).promise();
+
+      // Construct URL
+      let url: string;
+
+      if (this.baseUrl) {
+        // Prefer a configured base URL (Backblaze friendly URL or CDN)
+        url = `${this.baseUrl}/${fileKey}`;
+      } else if (this.provider === 'backblaze') {
+        url = `https://${this.bucket}.s3.${this.region}.backblazeb2.com/${fileKey}`;
+      } else {
+        // Default AWS S3 URL
+        url = `https://${this.bucket}.s3.amazonaws.com/${fileKey}`;
+      }
+
+      this.logger.log(`File uploaded successfully: ${fileKey}`);
+
+      return {
+        url,
+        key: fileKey,
+        size: file.size,
+        contentType: file.mimetype,
+      };
+    } catch (error: any) {
+      this.logger.error(`Failed to upload file: ${error.message}`, error);
+      throw new InternalServerErrorException(
+        `Failed to upload file: ${error.message}`,
+      );
+    }
+  }
+
+  /**
+   * Delete a file from Backblaze B2
+   */
+  async deleteFile(key: string): Promise<void> {
+    if (!this.s3) {
+      throw new Error('Object storage is not configured');
+    }
+
+    try {
+      const params: any = {
+        Bucket: this.bucket,
+        Key: key,
+      };
+
+      await this.s3.deleteObject(params).promise();
+      this.logger.log(`File deleted successfully: ${key}`);
+    } catch (error: any) {
+      this.logger.error(`Failed to delete file: ${error.message}`, error);
+      throw new InternalServerErrorException(
+        `Failed to delete file: ${error.message}`,
+      );
+    }
+  }
+
+  /**
+   * Get a signed URL for temporary access (download)
+   */
+  async getSignedUrl(key: string, expiresIn: number = 3600): Promise<string> {
+    if (!this.s3) {
+      throw new Error('Object storage is not configured');
+    }
+
+    try {
+      const params: any = {
+        Bucket: this.bucket,
+        Key: key,
+        Expires: expiresIn,
+      };
+
+      return this.s3.getSignedUrlPromise('getObject', params);
+    } catch (error: any) {
+      this.logger.error(
+        `Failed to generate signed URL: ${error.message}`,
+        error,
+      );
+      throw new InternalServerErrorException(
+        `Failed to generate signed URL: ${error.message}`,
+      );
+    }
+  }
+
+  /**
+   * Check if file exists
+   */
+  async fileExists(key: string): Promise<boolean> {
+    if (!this.s3) {
+      return false;
+    }
+
+    try {
+      await this.s3.headObject({ Bucket: this.bucket, Key: key }).promise();
+      return true;
+    } catch (error: any) {
+      if (error.code === 'NotFound') {
+        return false;
+      }
+      throw error;
+    }
+  }
+
+  /**
+   * Get file metadata
+   */
+  async getFileMetadata(key: string): Promise<any> {
+    if (!this.s3) {
+      throw new Error('Object storage is not configured');
+    }
+
+    try {
+      return await this.s3
+        .headObject({ Bucket: this.bucket, Key: key })
+        .promise();
+    } catch (error: any) {
+      this.logger.error(`Failed to get file metadata: ${error.message}`, error);
+      throw new InternalServerErrorException(
+        `Failed to get file metadata: ${error.message}`,
+      );
+    }
+  }
+
+  /**
+   * Check if a folder exists in storage
+   */
+  async folderExists(folderPath: string): Promise<boolean> {
+    if (!this.s3) {
+      return false;
+    }
+
+    try {
+      const normalizedPath = this.ensureTrailingSlash(folderPath);
+
+      // Check if any file exists in the folder path
+      const result = await this.s3
+        .listObjectsV2({
+          Bucket: this.bucket,
+          Prefix: normalizedPath,
+          MaxKeys: 1,
+        })
+        .promise();
+
+      return (result.Contents?.length ?? 0) > 0;
+    } catch (error: any) {
+      this.logger.error(
+        `Failed to check folder existence: ${error.message}`,
+        error,
+      );
+      return false;
+    }
+  }
+
+  /**
+   * Ensure folder path has trailing slash
+   */
+  private ensureTrailingSlash(path: string): string {
+    return path.endsWith('/') ? path : `${path}/`;
+  }
+
+  /**
+   * Get file extension from filename
+   */
+  private getFileExtension(filename: string): string {
+    const lastDotIndex = filename.lastIndexOf('.');
+    return lastDotIndex !== -1 ? filename.substring(lastDotIndex) : '';
+  }
+}
