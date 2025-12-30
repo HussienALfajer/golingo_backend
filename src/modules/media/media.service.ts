@@ -32,8 +32,16 @@ export class MediaService {
     const provider = this.configService.get<string>('storage.provider') ?? 's3';
 
     this.bucket =
-      this.configService.get<string>('storage.bucket') ?? 'sign-language-media';
-    this.baseUrl = this.configService.get<string>('storage.baseUrl') ?? '';
+      this.configService.get<string>('storage.bucket')?.trim() ?? 'sign-language-media';
+    this.baseUrl = this.configService.get<string>('storage.baseUrl')?.trim() ?? '';
+
+    // Validate bucket name
+    if (!this.bucket) {
+      this.logger.warn(
+        'Storage bucket name is not configured. Object storage will be disabled.',
+      );
+      return;
+    }
 
     try {
       this.AWS = require('aws-sdk');
@@ -46,10 +54,12 @@ export class MediaService {
 
     const accessKeyId =
       this.configService.get<string>('storage.accessKeyId') ??
-      this.configService.get<string>('storage.awsAccessKeyId');
+      this.configService.get<string>('storage.awsAccessKeyId') ??
+      '';
     const secretAccessKey =
       this.configService.get<string>('storage.secretAccessKey') ??
-      this.configService.get<string>('storage.awsSecretAccessKey');
+      this.configService.get<string>('storage.awsSecretAccessKey') ??
+      '';
     const region =
       this.configService.get<string>('storage.region') ??
       this.configService.get<string>('storage.awsRegion') ??
@@ -57,11 +67,12 @@ export class MediaService {
     const endpoint =
       this.configService.get<string>('storage.endpoint') ??
       this.configService.get<string>('storage.s3Endpoint') ??
-      undefined;
+      '';
 
-    if (!accessKeyId || !secretAccessKey) {
+    // Validate credentials - check for empty strings too
+    if (!accessKeyId?.trim() || !secretAccessKey?.trim()) {
       this.logger.warn(
-        'Storage credentials are not configured. Object storage will be disabled.',
+        'Storage credentials are not configured or are empty. Object storage will be disabled.',
       );
       return;
     }
@@ -73,17 +84,37 @@ export class MediaService {
         provider === 'backblaze' && (!region || region === 'us-east-1')
           ? 'us-east-005'
           : region;
-      const resolvedEndpoint =
-        provider === 'backblaze' && !endpoint
-          ? `https://s3.us-east-005.backblazeb2.com`
-          : endpoint;
+      
+      // For Backblaze B2, ensure endpoint is properly formatted
+      let resolvedEndpoint: string | undefined = undefined;
+      if (provider === 'backblaze') {
+        if (endpoint?.trim()) {
+          // Use provided endpoint, ensure it doesn't have trailing slash
+          resolvedEndpoint = endpoint.trim().replace(/\/$/, '');
+        } else {
+          // Default endpoint based on region
+          const b2Region = resolvedRegion || 'us-east-005';
+          resolvedEndpoint = `https://s3.${b2Region}.backblazeb2.com`;
+        }
+      } else if (endpoint?.trim()) {
+        // For AWS S3, use provided endpoint
+        resolvedEndpoint = endpoint.trim().replace(/\/$/, '');
+      }
 
       this.region = resolvedRegion;
       this.endpoint = resolvedEndpoint || null;
 
+      // Validate that region is set (required for S3)
+      if (!this.region) {
+        this.logger.warn(
+          'Storage region is not configured. Object storage will be disabled.',
+        );
+        return;
+      }
+
       this.s3 = new this.AWS.S3({
-        accessKeyId,
-        secretAccessKey,
+        accessKeyId: accessKeyId.trim(),
+        secretAccessKey: secretAccessKey.trim(),
         region: this.region,
         endpoint: this.endpoint || undefined,
         signatureVersion: 'v4',
@@ -242,8 +273,26 @@ export class MediaService {
       };
     } catch (error: any) {
       this.logger.error(`Failed to upload file: ${error.message}`, error);
+      
+      // Provide specific guidance for 403 Forbidden errors
+      if (error.code === 'Forbidden' || error.statusCode === 403) {
+        const errorDetails = [
+          'S3 Access Forbidden (403). Possible causes:',
+          `1. Invalid credentials - Check AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY`,
+          `2. Wrong bucket name - Current: ${this.bucket}`,
+          `3. Insufficient permissions - Application key needs writeFiles permission`,
+          `4. Wrong endpoint - Current: ${this.endpoint || 'default'}`,
+          `5. Wrong region - Current: ${this.region}`,
+        ].join('\n');
+        
+        this.logger.error(errorDetails);
+        throw new InternalServerErrorException(
+          `S3 Access Forbidden. Please verify your credentials, bucket name (${this.bucket}), and application key permissions.`,
+        );
+      }
+      
       throw new InternalServerErrorException(
-        `Failed to upload file: ${error.message}`,
+        `Failed to upload file: ${error.message || 'Unknown error'}`,
       );
     }
   }
