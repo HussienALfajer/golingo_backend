@@ -75,9 +75,9 @@ export const configValidationSchema = Joi.object({
   STORAGE_PROVIDER: Joi.string().default('backblaze'),
   STORAGE_BUCKET: Joi.string().required(),
   STORAGE_BASE_URL: Joi.string().required(),
-  AWS_ACCESS_KEY_IDs: Joi.string().required(),
-  AWS_SECRET_ACCESS_KEYs: Joi.string().required(),
-  AWS_REGIONs: Joi.string().required(),
+  AWS_ACCESS_KEY_ID: Joi.string().required(),
+  AWS_SECRET_ACCESS_KEY: Joi.string().required(),
+  AWS_REGION: Joi.string().required(),
   AWS_S3_ENDPOINT: Joi.string().required(),
 
   // Firebase Configuration (optional)
@@ -115,14 +115,14 @@ export const configuration = (): AppConfig => {
       provider: process.env.STORAGE_PROVIDER || 'backblaze',
       bucket: process.env.STORAGE_BUCKET || 'sign-language-media',
       baseUrl: process.env.STORAGE_BASE_URL || '',
-      accessKeyId: process.env.AWS_ACCESS_KEY_IDs || '',
-      secretAccessKey: process.env.AWS_SECRET_ACCESS_KEYs || '',
-      region: process.env.AWS_REGIONs || 'us-east-1',
+      accessKeyId: process.env.AWS_ACCESS_KEY_ID || '',
+      secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY || '',
+      region: process.env.AWS_REGION || 'us-east-1',
       endpoint: process.env.AWS_S3_ENDPOINT || '',
       // Support alternative naming from reference project
-      awsAccessKeyId: process.env.AWS_ACCESS_KEY_IDs || '',
-      awsSecretAccessKey: process.env.AWS_SECRET_ACCESS_KEYs || '',
-      awsRegion: process.env.AWS_REGIONs || 'us-east-1',
+      awsAccessKeyId: process.env.AWS_ACCESS_KEY_ID || '',
+      awsSecretAccessKey: process.env.AWS_SECRET_ACCESS_KEY || '',
+      awsRegion: process.env.AWS_REGION || 'us-east-1',
       s3Endpoint: process.env.AWS_S3_ENDPOINT || '',
     },
     firebase: {
