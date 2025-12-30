@@ -250,18 +250,18 @@ async function main() {
           provider: ['STORAGE_PROVIDER'],
           bucket: ['STORAGE_BUCKET'],
           baseUrl: ['STORAGE_BASE_URL'],
-          accessKeyId: ['STORAGE_ACCESS_KEY_ID', 'AWS_ACCESS_KEY_ID'],
-          awsAccessKeyId: ['AWS_ACCESS_KEY_ID', 'STORAGE_ACCESS_KEY_ID'],
+          accessKeyId: ['STORAGE_ACCESS_KEY_ID', 'AWS_ACCESS_KEY_IDs'],
+          awsAccessKeyId: ['AWS_ACCESS_KEY_IDs', 'STORAGE_ACCESS_KEY_ID'],
           secretAccessKey: [
             'STORAGE_SECRET_ACCESS_KEY',
-            'AWS_SECRET_ACCESS_KEY',
+            'AWS_SECRET_ACCESS_KEYs',
           ],
           awsSecretAccessKey: [
-            'AWS_SECRET_ACCESS_KEY',
+            'AWS_SECRET_ACCESS_KEYs',
             'STORAGE_SECRET_ACCESS_KEY',
           ],
-          region: ['STORAGE_REGION', 'AWS_REGION'],
-          awsRegion: ['AWS_REGION', 'STORAGE_REGION'],
+          region: ['STORAGE_REGION', 'AWS_REGIONs'],
+          awsRegion: ['AWS_REGIONs', 'STORAGE_REGION'],
           endpoint: ['STORAGE_ENDPOINT', 'S3_ENDPOINT'],
           s3Endpoint: ['S3_ENDPOINT', 'STORAGE_ENDPOINT'],
         };
@@ -299,10 +299,10 @@ async function main() {
     console.error(
       'Required environment variables:',
       '\n  - STORAGE_PROVIDER (or default: backblaze)',
-      '\n  - STORAGE_ACCESS_KEY_ID (or AWS_ACCESS_KEY_ID)',
-      '\n  - STORAGE_SECRET_ACCESS_KEY (or AWS_SECRET_ACCESS_KEY)',
+      '\n  - STORAGE_ACCESS_KEY_ID (or AWS_ACCESS_KEY_IDs)',
+      '\n  - STORAGE_SECRET_ACCESS_KEY (or AWS_SECRET_ACCESS_KEYs)',
       '\n  - STORAGE_BUCKET (or default: sign-language-media)',
-      '\n  - STORAGE_REGION (or AWS_REGION, or default: us-east-005)',
+      '\n  - STORAGE_REGION (or AWS_REGIONs, or default: us-east-005)',
     );
     console.error('\nCurrent env vars:', {
       STORAGE_PROVIDER: process.env.STORAGE_PROVIDER,

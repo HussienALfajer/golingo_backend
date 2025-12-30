@@ -71,9 +71,9 @@ AR_ALLOWED_ORIGINS=http://localhost:3000,http://localhost:4200
 STORAGE_PROVIDER=backblaze
 STORAGE_BUCKET=sign-language-media
 STORAGE_BASE_URL=https://f005.backblazeb2.com/file/sign-language-media
-AWS_ACCESS_KEY_ID=your_backblaze_key_id
-AWS_SECRET_ACCESS_KEY=your_backblaze_application_key
-AWS_REGION=us-east-005
+AWS_ACCESS_KEY_IDs=your_backblaze_key_id
+AWS_SECRET_ACCESS_KEYs=your_backblaze_application_key
+AWS_REGIONs=us-east-005
 AWS_S3_ENDPOINT=https://s3.us-east-005.backblazeb2.com
 
 # Firebase Configuration (optional, for push notifications)
@@ -245,9 +245,9 @@ Required variables:
 - `AR_ALLOWED_ORIGINS`
 - `STORAGE_BUCKET`
 - `STORAGE_BASE_URL`
-- `AWS_ACCESS_KEY_ID`
-- `AWS_SECRET_ACCESS_KEY`
-- `AWS_REGION`
+- `AWS_ACCESS_KEY_IDs`
+- `AWS_SECRET_ACCESS_KEYs`
+- `AWS_REGIONs`
 - `AWS_S3_ENDPOINT`
 
 ## Error Handling
