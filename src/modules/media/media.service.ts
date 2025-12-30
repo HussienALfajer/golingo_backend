@@ -74,6 +74,9 @@ export class MediaService {
       this.logger.warn(
         'Storage credentials are not configured or are empty. Object storage will be disabled.',
       );
+      this.logger.debug(
+        `Storage config check - AccessKeyId: ${accessKeyId ? 'SET' : 'MISSING'} (length: ${accessKeyId?.length || 0}), SecretAccessKey: ${secretAccessKey ? 'SET' : 'MISSING'} (length: ${secretAccessKey?.length || 0})`,
+      );
       return;
     }
 
@@ -121,11 +124,20 @@ export class MediaService {
         s3ForcePathStyle: true,
       });
 
+      // Log configuration (masking secrets)
+      const maskedAccessKey = accessKeyId.trim().substring(0, 4) + '***' + accessKeyId.trim().substring(accessKeyId.trim().length - 4);
       this.logger.log(
         provider === 'backblaze'
-          ? 'Backblaze B2 (S3-compatible) storage initialized successfully'
-          : 'AWS S3 storage initialized successfully',
+          ? `Backblaze B2 (S3-compatible) storage initialized - Bucket: ${this.bucket}, Region: ${this.region}, Endpoint: ${this.endpoint || 'default'}, AccessKey: ${maskedAccessKey}`
+          : `AWS S3 storage initialized - Bucket: ${this.bucket}, Region: ${this.region}, AccessKey: ${maskedAccessKey}`,
       );
+
+      // Test connection by attempting to head the bucket (non-destructive test)
+      this.testConnection().catch((error) => {
+        this.logger.warn(
+          `S3 connection test failed: ${error.message}. This may indicate credential or permission issues.`,
+        );
+      });
     } else {
       this.logger.warn(
         `Unknown storage provider: ${provider}. Object storage will be disabled.`,
@@ -414,6 +426,44 @@ export class MediaService {
         error,
       );
       return false;
+    }
+  }
+
+  /**
+   * Test S3 connection by attempting to list buckets or head bucket
+   */
+  private async testConnection(): Promise<void> {
+    if (!this.s3) {
+      return;
+    }
+
+    try {
+      // Try to list buckets first (tests basic credentials)
+      await this.s3.listBuckets().promise();
+      this.logger.log('S3 connection test successful - credentials are valid');
+    } catch (error: any) {
+      // If listBuckets fails, try headBucket (tests bucket-specific access)
+      try {
+        await this.s3.headBucket({ Bucket: this.bucket }).promise();
+        this.logger.log(
+          `S3 connection test successful - bucket '${this.bucket}' is accessible`,
+        );
+      } catch (headError: any) {
+        if (headError.code === 'Forbidden' || headError.statusCode === 403) {
+          this.logger.error(
+            `S3 connection test failed with 403 Forbidden. This usually means:
+1. Application Key doesn't have 'listBuckets' or 'readFiles' capability
+2. Application Key is restricted to a different bucket
+3. Bucket name '${this.bucket}' doesn't match the key's allowed buckets
+Please check your Backblaze B2 Application Key permissions.`,
+          );
+        } else {
+          this.logger.warn(
+            `S3 connection test failed: ${headError.message || error.message}`,
+          );
+        }
+        // Don't throw - this is just a test, service can still be used
+      }
     }
   }
 
